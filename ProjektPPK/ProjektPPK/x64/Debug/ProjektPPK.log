@@ -1,0 +1,3 @@
+﻿  Źródło.cpp
+c:\users\kasia\desktop\projektppk\projektppk\źródło.cpp(64): warning C4715: "load_etykiety_from_file”: niewszystkie ścieżki kodu zwracają wartość
+  ProjektPPK.vcxproj -> C:\Users\Kasia\Desktop\ProjektPPK\x64\Debug\ProjektPPK.exe

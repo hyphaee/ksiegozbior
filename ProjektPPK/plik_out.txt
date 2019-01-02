@@ -1,0 +1,32 @@
+Etykieta: cos
+	1. zych:Prosta historia
+
+
+Etykieta: nowosci
+	1. alowacki:Daleko jeszcze
+	2. baaaca:Przyklad4
+	3. bach:Przyklad3
+	4. zyyyr:Przyklad 2
+
+
+Etykieta: dramat
+	1. alowacki:Daleko jeszcze
+	2. cygan:Gdanskie opowiesci
+
+
+Etykieta: romans
+	1. bmickiewicz:Pan Tadeusz
+
+
+Etykieta: podrecznik
+	1. cormen:Algorytmy
+	2. cygan:Gdanskie opowiesci
+	3. zych:Prosta historia
+
+
+Etykieta: informatyka
+	1. cormen:Algorytmy
+	2. cygan:Gdanskie opowiesci
+	3. zych:Prosta historia
+
+

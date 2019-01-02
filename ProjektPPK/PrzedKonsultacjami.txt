@@ -1,0 +1,276 @@
+// PPK_projekt.cpp : This file contains the 'main' function. Program execution begins and ends there.
+#include "Nag³ówek.h"
+
+int main()
+{
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	Autor *pGlowaA=nullptr; 
+	Etykieta *pGlowa=new Etykieta;
+	(*pGlowa).autor = pGlowaA;
+
+	std::string FILE_PATH;
+	std::string FILE_PATH_OUT;
+
+	load_etykiety_from_file(pGlowa);
+
+	zapisz_do_pilku(FILE_PATH_OUT, pGlowa);
+
+	system("PAUSE");
+	return 0;
+}
+
+void load_etykiety_from_file(Etykieta * & pHead)
+{
+	std::fstream file;
+
+	file.open("C:\\Users\\Kasia\\Desktop\\ProjektPPK\\plik.txt", std::ios::in | std::ios::out);
+	
+	//przeniesc do maina
+	if (!file.is_open())
+	{
+		std::cout << std::endl << "Proba otwarcia pliku zakonczyla sie niepowodzeniem" << std::endl;
+		return;
+	}
+
+	while (!file.eof())
+	{
+		std::string autor;
+		getline(file, autor, ';');
+		
+		std::string tytul;
+		getline(file, tytul, ';');
+		
+		std::vector < std::string > etykiety;
+		
+		std::string tmp;
+		getline(file, tmp, ','); 
+		while(tmp!="\n") {
+			etykiety.push_back(tmp);
+			
+			if (file.get() == '\n') //pierwsza etykieta jest ze spacj¹
+			{
+				break;
+			}
+			else
+				getline(file, tmp, ',');
+		if (file.eof())
+			break;
+		} 
+
+		dodaj_etykiete(autor, tytul, etykiety, pHead);
+
+	}
+	file.close();
+}
+
+//const do vectora
+void dodaj_etykiete(std::string autor, std::string tytul, std::vector < std::string >&etykiety, Etykieta * & pHead)
+{
+	int it =0;
+	do {
+		//Sprawdzenie czy lista jest pusta
+		if (pHead->etykieta=="brak")//jeœli pusta
+		{
+			dodaj_pierwszy_element(etykiety,it,autor,tytul,pHead);
+		}
+		else //gdy nie jest pusta
+		{
+			Etykieta *pom;
+			pom = pHead;
+
+			//sprawdzenie czy etykieta istnieje w liœcie 
+			if (czy_etykieta_istnieje(etykiety, pom, it))//gdy ju¿ jest na liœcie -> musze j¹ odszukaæ i sprawdziæ czy dana pozycja ju¿ tam jest
+			{	
+		
+				while (pom) //przechodze po liœcie ¿eby znaleŸæ t¹ etykietê
+				{
+					if (etykiety.at(it) == pom->etykieta)
+					{
+						
+						Autor *p = pom->autor;
+							Autor *pNowyA = new Autor;
+							pNowyA->autor = autor;
+							pNowyA->tytul = tytul;
+
+							//Autor *k = pom->autor;
+
+							//dodoaje tej etykiecie takiego autora z taka pozycja, wstawiam to alfabetycznie
+							while (p)
+							{
+							   //przed pierwszym -DZIA£A
+							if (p->autor > autor) //nie widzi autora przypisanego do tej pozcji 
+							{
+								pNowyA->nastepny = p;
+								p = pNowyA;
+								break;
+								
+							}
+								//dodawanie autora jako ostatnia pozycje
+							
+							if (p->autor < autor&&p->nastepny == nullptr)
+							{
+									pNowyA->nastepny = nullptr;
+									p->nastepny = pNowyA;
+									break;
+
+						    }
+
+								else if (p->autor<autor&&p->nastepny->autor>autor)
+								{
+									pNowyA->nastepny = p->nastepny;
+									p->nastepny = pNowyA;
+									break;
+								}
+								p = p->nastepny;
+
+							}
+					}
+					pom = pom->nastepna;
+				}
+				
+			}
+			
+			else//gdy nie ma jej na liœcie- dodaje na pocz¹tek
+			{
+				dodaj_na_poczatek(etykiety, it, autor, tytul, pHead);
+				
+			}
+		}
+	   
+		it++;
+	} while (etykiety.size() > it);
+
+}
+
+bool czy_etykieta_istnieje(std::vector < std::string >&etykiety, Etykieta *  pHead,int it) //gdyby tak usunac apersadna ¿eby nie zmieniaæ g
+{
+	int wynik = 0;
+	while (pHead)
+	{
+		if (etykiety.at(it) == pHead->etykieta)
+		{
+			wynik = 1;
+			return wynik;
+		}
+		pHead = pHead->nastepna;
+	}
+	return wynik;
+}
+
+bool czy_pozycja_juz_istnieje(std::string autor, std::string tytul,Etykieta *  pHead)
+
+{
+	Etykieta*pom;
+	pom = pHead;
+	
+	int wynik = 0;
+
+	while (pHead->autor)
+	{
+		if ((pHead->autor->autor == autor) && (pHead->autor->tytul == tytul))
+		{
+			wynik = 1;
+			return 1;
+		}
+
+		pHead->autor = pHead->autor->nastepny;
+		
+	}
+	pHead = pom;
+	int a = 10;
+	return wynik;
+}
+
+void dodaj_pierwszy_element(std::vector < std::string >&etykiety, int it, std::string autor, std::string tytul, Etykieta * & pHead)
+{
+	Etykieta *pNowy = new Etykieta;
+	Autor *pNowyA = new Autor;
+	pNowy->autor = pNowyA;
+
+	pNowy->etykieta = etykiety.at(it);
+	pNowy->autor->autor = autor;
+	pNowy->autor->tytul = tytul;
+	pNowy->autor->nastepny = nullptr;
+	pNowy->nastepna = nullptr;
+
+	pHead = pNowy; //po wyjsciu zapomina liste
+	
+}
+
+void dodaj_na_poczatek(std::vector < std::string >&etykiety, int it, std::string autor, std::string tytul, Etykieta * & pHead)
+{
+	Etykieta *pNowy = new Etykieta;
+	Autor *pNowyA = new Autor;
+	(*pNowy).autor = pNowyA;
+
+
+	pNowy->etykieta = etykiety.at(it);
+	pNowy->autor->autor = autor;
+	pNowy->autor->tytul = tytul;
+	pNowy->autor->nastepny = nullptr;
+	pNowy->nastepna = pHead;
+	pHead = pNowy;
+
+}
+
+void zapisz_do_pilku(std::string file_path, Etykieta * & pHead)
+{
+	std::fstream file;
+	//file.open(file_path, std::ios::trunc | std::ios::out);
+	file.open("C:\\Users\\Kasia\\Desktop\\ProjektPPK\\plik_out.txt", std::ios::trunc | std::ios::out);
+	
+	if (!file.is_open())
+	{
+		return;
+	}
+	
+	pHead = pHead->nastepna;
+	while (pHead)
+
+	{
+		int licznik = 1;
+		file << "Etykieta: " << pHead->etykieta << std::endl;
+		
+		while(pHead->autor)
+		{
+			file <<"\t"<<licznik<<". " << pHead->autor->autor << ":" << pHead->autor->tytul << std::endl;
+			pHead->autor = pHead->autor->nastepny;
+			licznik++;
+		}
+		file << std::endl << std::endl;
+		pHead = pHead->nastepna;
+	}
+	file.close();
+}
+
+void dodaj_autora(std::string autor, std::string tytul, Autor *pHead)
+{
+	//Nie widzi pHeada
+/*
+	Autor *pNowyA = new Autor;
+	pNowyA->autor = autor;
+	pNowyA->tytul = tytul;
+
+	//dodoaje tej etykiecie takiego autora z taka pozycja, wstawiam to alfabetycznie
+
+	   //przed pierwszym
+	if (pHead->autor > autor) //nie widzi autora przypisanego do tej pozcji 
+	{
+		pNowyA->nastepny = pHead)autor;
+		(*pHead)->autor = pNowyA;
+		
+
+	}*/
+		/*
+		while (pom->nastepny)
+		{
+			if (pom->autor<autor&&(pom->nastepny->autor>autor|| pom->nastepny == nullptr))
+			{
+				pNowyA->nastepny = pom->nastepny;
+				pom->nastepny = pNowyA;
+
+			}
+			pom->nastepny= pom->nastepny->nastepny;
+		}
+	*/
+}

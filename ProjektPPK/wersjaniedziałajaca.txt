@@ -1,0 +1,252 @@
+// PPK_projekt.cpp : This file contains the 'main' function. Program execution begins and ends there.
+#include "Nag³ówek.h"
+
+
+
+//int main(int argc, char *argv[])
+int main()
+{
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	Autor *pGlowaA=nullptr; //czy new Autor?
+	Etykieta *pGlowa=new Etykieta;
+	(*pGlowa).autor = pGlowaA;
+
+	std::string FILE_PATH;
+	std::string FILE_PATH_OUT;
+
+/*
+	if (argc != 3)
+	{
+		std::cerr << "Niepoprawna ilosc argumentow\n";
+		return 1;
+	}
+	*/
+	//FILE_PATH = argv[1];
+	
+	load_etykiety_from_file(pGlowa);
+	//FILE_PATH_OUT = argv[2];
+	zapisz_do_pilku(FILE_PATH_OUT, pGlowa);
+
+	system("PAUSE");
+	return 0;
+}
+
+void load_etykiety_from_file(Etykieta * & pHead)
+{
+	std::fstream file;
+
+	file.open("C:\\Users\\Kasia\\Desktop\\ProjektPPK\\plik.txt", std::ios::in | std::ios::out);
+	
+	if (!file.is_open())
+	{
+		std::cout << std::endl << "Proba otwarcia pliku zakonczyla sie niepowodzeniem" << std::endl;
+		return;
+	}
+
+	while (!file.eof())
+	{
+		std::string autor;
+		getline(file, autor, ';');
+		
+		std::string tytul;
+		getline(file, tytul, ';');
+		
+		std::vector < std::string > etykiety;
+		
+		std::string tmp;
+		getline(file, tmp, ','); //pobiersz pierwsza etykiete i zapisz do wektora etykiet, sprawdzaj czy istnieja inne etykiety do momentu znalezienia przejscia do nowej lini
+		while(tmp!="\n") {
+			etykiety.push_back(tmp);
+			
+			if (file.get() == '\n')
+			{
+				break;
+			}
+			else
+				getline(file, tmp, ',');
+		if (file.eof())
+			break;
+		} 
+		//za³adowny wiersz... tu powinno nastapiæ zapisnie do listy 
+		dodaj_etykiete(autor, tytul, etykiety, pHead);
+
+	}
+	file.close();
+}
+
+void dodaj_etykiete(std::string autor, std::string tytul, std::vector < std::string >&etykiety, Etykieta * & pHead)
+{
+	int it =0;
+	do {
+		//Sprawdzenie czy lista jest pusta
+		if (pHead->etykieta=="brak")//jeœli pusta
+		{
+			dodaj_pierwszy_element(etykiety,it,autor,tytul,pHead);
+		}
+		else //gdy nie jest pusta
+		{
+			//sprawdzenie czy etykieta istnieje w liœcie 
+			if (czy_etykieta_istnieje(etykiety, pHead, it))//gdy ju¿ jest na liœcie -> musze j¹ odszukaæ i sprawdziæ czy dana pozycja ju¿ tam jest
+			{
+				Etykieta *pNowy = pHead;
+				while (pHead) //przechodze po liœcie ¿eby znaleŸæ t¹ etykietê
+				{
+					Autor *pNowyA = new Autor;
+					//(*pNowy).autor = pNowyA;
+
+					if (etykiety.at(it) == pHead->etykieta)
+					{
+						//sprawdzenie czy dana pozycja ju¿ tam jest
+						if (czy_pozycja_juz_istnieje(autor, tytul, pHead))//TA POZYCJA JU¯ JEST PRZYPISANA DO TEJ ETYKIETY-zakoncz petle
+						{
+							break;
+						}
+						else //nie ma tej pozycji w tej wtykiecie
+						{
+							while (pHead->autor)//dodoaje tej etykiecie takiego autora z taka pozycja, wstawiam to alfabetycznie
+							{
+								if (pHead->autor->autor < autor&&pHead->autor->nastepny->autor < autor) //dodaje za elem. pHead->autro a przed phead->nasepnt->autor
+								{
+									//Autor *pNowy = new Autor;
+									(*pNowyA).autor = autor;
+									(*pNowyA).tytul = tytul;
+									(*pNowyA).nastepny = pHead->autor->nastepny;
+									pHead->autor->nastepny = pNowyA;
+
+								}
+								else if (pHead->autor->autor < autor && pHead->autor->nastepny == nullptr) //dodaje na koniec 
+								{
+									//Autor *pNowy = new Autor;
+									(*pNowyA).autor = autor;
+									(*pNowyA).tytul = tytul;
+									(*pNowyA).nastepny = nullptr;
+									pHead->autor->nastepny = pNowyA;
+
+								}
+								pHead->autor = pHead->autor->nastepny;
+							}
+						}
+					}
+
+					pHead = pHead->nastepna;
+				}
+				pHead = pNowy;
+			}
+			
+			else//gdy nie ma jej na liœcie- dodaje na pocz¹tek
+			{
+				dodaj_na_poczatek(etykiety, it, autor, tytul, pHead);
+				//po wejsciu tutaj nagle lista stajw sie pusta, why? wyzerowuje sie g³owa :(
+				
+			}
+		}
+	    //dopoki iterator jest >=0
+		//sprawdz czy lista etykiet jest pusta
+		//TAK: dodaj etykiedte jako pierwszy element listy
+		//NIE: Sprawdz czy etykieta juz istanieje w liscie
+		// tak: wejdz do listy autorow i sprawdz czy podany autor z dana ksi¹zk¹ (&&) juz zostal dodany
+		//		tak: wyjdz z petli - pobierz nowa ettykiete i wykonaj kroki od poczatku
+		//		nie: znajdz pozycje w ktora nalezy dodaæ autora (alfabetycznie), dodaj autora, wyjdz z petli, pob nowa etykiete i wykonaj kroki od poczatku
+		// nie: dodaj etykiete na koniec listy + dodaj autora 
+		
+		it++;
+	} while (etykiety.size() > it);
+
+}
+
+bool czy_etykieta_istnieje(std::vector < std::string >&etykiety, Etykieta * & pHead,int it) //gdyby tak usunac apersadna ¿eby nie zmieniaæ g
+{
+	int wynik = 0;
+	Etykieta *pNowy = new Etykieta;
+	pNowy = pHead;
+	while (pHead)
+	{
+		if (etykiety.at(it) == pHead->etykieta)
+		{
+			wynik = 1;
+			return wynik;
+		}
+		pHead = pHead->nastepna;
+	}
+	pHead = pNowy;
+	return wynik;
+}
+
+bool czy_pozycja_juz_istnieje(std::string autor, std::string tytul,Etykieta * & pHead)
+
+{
+	Etykieta *pNowy = new Etykieta;
+	pNowy = pHead;
+	int wynik = 0;
+
+	while (pHead->autor)
+	{
+		if ((pHead->autor->autor == autor) && (pHead->autor->tytul == tytul))
+		{
+			wynik = 1;
+			return 1;
+		}
+
+		pHead->autor = pHead->autor->nastepny;
+	}
+	pHead = pNowy;
+	return wynik;
+}
+
+void dodaj_pierwszy_element(std::vector < std::string >&etykiety, int it, std::string autor, std::string tytul, Etykieta * & pHead)
+{
+	Etykieta *pNowy = new Etykieta;
+	Autor *pNowyA = new Autor;
+	(*pNowy).autor = pNowyA;
+
+	(*pNowy).etykieta = etykiety.at(it);
+	(*pNowy).autor->autor = autor;
+	(*pNowy).autor->tytul = tytul;
+	(*pNowy).autor->nastepny = nullptr;
+	pNowy->nastepna = nullptr;
+
+	pHead = pNowy; //po wyjsciu zapomina liste
+}
+
+void dodaj_na_poczatek(std::vector < std::string >&etykiety, int it, std::string autor, std::string tytul, Etykieta * & pHead)
+{
+	Etykieta *pNowy = new Etykieta;
+	Autor *pNowyA = new Autor;
+	(*pNowy).autor = pNowyA;
+
+	//Etykieta *pNowy = new Etykieta;
+	pNowy->etykieta = etykiety.at(it);
+	pNowy->autor->autor = autor;
+	pNowy->autor->tytul = tytul;
+
+	pNowy->autor->nastepny = nullptr;
+	pNowy->nastepna = pHead;
+	pHead = pNowy;
+
+}
+
+void zapisz_do_pilku(std::string file_path, Etykieta * & pHead)
+{
+	std::fstream file;
+	//file.open(file_path, std::ios::trunc | std::ios::out);
+	file.open("C:\\Users\\Kasia\\Desktop\\ProjektPPK\\plik_out.txt", std::ios::trunc | std::ios::out);
+	
+	if (!file.is_open())
+	{
+		return;
+	}
+
+	while (pHead)
+	{
+		file << "Etykieta: " << pHead->etykieta << std::endl;
+		
+		while(pHead->autor)
+		{
+			file << pHead->autor->autor << ";" << pHead->autor->tytul << std::endl;
+			pHead->autor = pHead->autor->nastepny;
+		}
+		file << std::endl << std::endl;
+		pHead = pHead->nastepna;
+	}
+	file.close();
+}
